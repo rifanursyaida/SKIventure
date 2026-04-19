@@ -1,4 +1,4 @@
-name: skiventure
+name: SKIventure
 description: "SKIVENTURE – Khulafaur Rasyidin Learning App"
 publish_to: 'none'
 
@@ -31,10 +31,10 @@ dependencies:
   # Icons
   cupertino_icons: ^1.0.8
 
-  #animasi
+  # Animasi
   flutter_animate: ^4.5.0
 
-  # firebase_core:
+  # Firebase
   firebase_core: ^3.6.0
   firebase_auth: ^5.3.0
   cloud_firestore: ^5.4.0
@@ -43,12 +43,23 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  # Package untuk generate ikon dipindah ke sini
+  flutter_launcher_icons: ^0.13.1
 
 dependency_overrides:
+  # Hati-hati dengan override, pastikan memang diperlukan untuk kompatibilitas webview
   flutter_inappwebview: ^6.0.0
+
+# Konfigurasi Ikon Aplikasi
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  min_sdk_android: 21 # Sesuaikan dengan minSdk di build.gradle
 
 flutter:
   uses-material-design: true
 
   assets:
     - lib/videos/
+    - assets/icon/ # Tambahkan folder icon ke assets agar terbaca
