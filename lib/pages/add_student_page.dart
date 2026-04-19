@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class AddStudentPage extends StatefulWidget {
   const AddStudentPage({super.key});
@@ -11,19 +10,22 @@ class AddStudentPage extends StatefulWidget {
 
 class _AddStudentPageState extends State<AddStudentPage> {
   final nameController = TextEditingController();
-  final emailController = TextEditingController();
 
+  String? selectedKelas;
   bool isLoading = false;
 
+  String teacherId = "O9p2Nhl1CspdbrvJjHXo";
+
+  final List<String> kelasList = [
+    "X",
+    "XI",
+    "XII",
+  ];
+
   Future<void> addStudent() async {
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) return;
-
-    // ✅ VALIDASI
-    if (nameController.text.isEmpty || emailController.text.isEmpty) {
+    if (nameController.text.isEmpty || selectedKelas == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Semua field wajib diisi")),
+        const SnackBar(content: Text("Nama dan kelas wajib diisi")),
       );
       return;
     }
@@ -33,16 +35,16 @@ class _AddStudentPageState extends State<AddStudentPage> {
     try {
       await FirebaseFirestore.instance.collection('students').add({
         "name": nameController.text.trim(),
-        "email": emailController.text.trim(),
-        "createdBy": user.uid,
-        "createdAt": FieldValue.serverTimestamp(),
+        "kelas": selectedKelas,
+        "teacher_id": teacherId,
+        "created_at": Timestamp.now(),
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Siswa berhasil ditambahkan")),
       );
 
-      Navigator.pop(context); // balik ke halaman list siswa
+      Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
@@ -55,52 +57,130 @@ class _AddStudentPageState extends State<AddStudentPage> {
   @override
   void dispose() {
     nameController.dispose();
-    emailController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FB),
       appBar: AppBar(
-        title: const Text("Tambah Siswa"),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        centerTitle: true,
+        title: const Text(
+          "Tambah Siswa",
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Colors.black),
       ),
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            // 👤 Nama
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: "Nama Siswa",
-                border: OutlineInputBorder(),
+            // 🔹 CARD CONTAINER
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  )
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Nama Siswa",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 10),
+
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      hintText: "Masukkan nama...",
+                      filled: true,
+                      fillColor: const Color(0xFFF1F3F6),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  const Text(
+                    "Kelas",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 10),
+
+                  DropdownButtonFormField<String>(
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: const Color(0xFFF1F3F6),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    hint: const Text("Pilih Kelas"),
+                    value: selectedKelas,
+                    items: kelasList.map((kelas) {
+                      return DropdownMenuItem(
+                        value: kelas,
+                        child: Text(kelas),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedKelas = value;
+                      });
+                    },
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 15),
 
-            // 📧 Email
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: "Email Siswa",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 25),
+            const Spacer(),
 
-            // 🚀 Button
+            // 🔹 BUTTON DUOLINGO STYLE
             SizedBox(
               width: double.infinity,
+              height: 55,
               child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF58CC02),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  elevation: 4,
+                ),
                 onPressed: isLoading ? null : addStudent,
                 child: isLoading
                     ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  height: 22,
+                  width: 22,
+                  child: CircularProgressIndicator(
+                      color: Colors.white, strokeWidth: 2),
                 )
-                    : const Text("Simpan"),
+                    : const Text(
+                  "Simpan",
+                  style: TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
