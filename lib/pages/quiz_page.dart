@@ -1,17 +1,17 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-
-class AppColors {
-  static const Color emerald = Color(0xFF0D9373);
-  static const Color emeraldDark = Color(0xFF065F46);
-  static const Color gold = Color(0xFFF59E0B);
-  static const Color cream = Color(0xFFF5F7FB); // 🔥 light modern
-}
 
 class QuizPage extends StatefulWidget {
-  const QuizPage({super.key});
+  final String studentId;
+  final String teacherId;
+  final String materiId; // nama khalifah
+
+  const QuizPage({
+    super.key,
+    required this.studentId,
+    required this.teacherId,
+    required this.materiId,
+  });
 
   @override
   State<QuizPage> createState() => _QuizPageState();
@@ -20,70 +20,160 @@ class QuizPage extends StatefulWidget {
 class _QuizPageState extends State<QuizPage> {
   int currentQuestion = 0;
   int score = 0;
-  String? selectedAnswer;
-
-  int timeLeft = 15;
+  int correctAnswer = 0;
+  int timeLeft = 30;
   Timer? timer;
 
-  final user = FirebaseAuth.instance.currentUser;
+  List<Map<String, dynamic>> questions = [
+    // ===== EXISTING (tetap dipertahankan) =====
+    {
+      'question': 'Siapa khalifah pertama?',
+      'options': ['Ali', 'Umar', 'Abu Bakar', 'Utsman'],
+      'answer': 2,
+      'khalifah': 'Abu Bakar'
+    },
 
-  final List<Map<String, dynamic>> questions = [
+    // ===== TAMBAHAN (total 20 soal, 5 per khalifah) =====
+
+    // Abu Bakar
     {
-      "question": "Siapa khalifah pertama setelah Rasulullah?",
-      "options": [
-        "Umar Bin Khattab",
-        "Abu Bakar Ash-Shiddiq",
-        "Ali Bin Abi Thalib",
-        "Utsman Bin Affan"
-      ],
-      "answer": "Abu Bakar Ash-Shiddiq",
-      "explanation":
-      "Abu Bakar adalah sahabat terdekat Nabi dan menjadi khalifah pertama."
+      'question': 'Apa gelar Abu Bakar?',
+      'options': ['Al-Faruq', 'As-Siddiq', 'Dzun Nurain', 'Al-Murtadha'],
+      'answer': 1,
+      'khalifah': 'Abu Bakar'
     },
     {
-      "question": "Siapa yang membuat kalender Hijriah?",
-      "options": ["Abu Bakar", "Umar Bin Khattab", "Utsman", "Ali"],
-      "answer": "Umar Bin Khattab",
-      "explanation":
-      "Umar menetapkan kalender Hijriah sebagai sistem penanggalan Islam."
+      'question': 'Apa fokus utama Abu Bakar?',
+      'options': ['Ekspansi', 'Kodifikasi Quran', 'Memerangi murtad', 'Administrasi'],
+      'answer': 2,
+      'khalifah': 'Abu Bakar'
     },
     {
-      "question": "Siapa yang membukukan Al-Qur’an menjadi satu mushaf?",
-      "options": [
-        "Utsman Bin Affan",
-        "Ali",
-        "Umar",
-        "Abu Bakar"
-      ],
-      "answer": "Utsman Bin Affan",
-      "explanation":
-      "Utsman menyatukan Al-Qur’an menjadi satu mushaf standar."
+      'question': 'Berapa lama Abu Bakar memerintah?',
+      'options': ['2 tahun', '5 tahun', '10 tahun', '1 tahun'],
+      'answer': 0,
+      'khalifah': 'Abu Bakar'
     },
     {
-      "question": "Siapa yang dikenal sangat cerdas dan ahli ilmu?",
-      "options": [
-        "Ali Bin Abi Thalib",
-        "Umar",
-        "Abu Bakar",
-        "Utsman"
-      ],
-      "answer": "Ali Bin Abi Thalib",
-      "explanation":
-      "Ali dikenal sangat cerdas dan ahli dalam berbagai ilmu."
+      'question': 'Siapa sahabat dekat Nabi?',
+      'options': ['Umar', 'Ali', 'Abu Bakar', 'Utsman'],
+      'answer': 2,
+      'khalifah': 'Abu Bakar'
+    },
+
+    // Umar
+    {
+      'question': 'Siapa khalifah kedua?',
+      'options': ['Ali', 'Umar', 'Utsman', 'Abu Bakar'],
+      'answer': 1,
+      'khalifah': 'Umar'
+    },
+    {
+      'question': 'Gelar Umar?',
+      'options': ['As-Siddiq', 'Al-Faruq', 'Dzun Nurain', 'Al-Amin'],
+      'answer': 1,
+      'khalifah': 'Umar'
+    },
+    {
+      'question': 'Apa keunggulan Umar?',
+      'options': ['Lembut', 'Tegas', 'Pemalu', 'Diam'],
+      'answer': 1,
+      'khalifah': 'Umar'
+    },
+    {
+      'question': 'Apa sistem yang dibuat Umar?',
+      'options': ['Pajak', 'Kalender Hijriyah', 'Bank', 'Sekolah'],
+      'answer': 1,
+      'khalifah': 'Umar'
+    },
+    {
+      'question': 'Wilayah meluas saat Umar?',
+      'options': ['Mekkah', 'Persia & Romawi', 'Madinah', 'Yaman'],
+      'answer': 1,
+      'khalifah': 'Umar'
+    },
+
+    // Utsman
+    {
+      'question': 'Siapa khalifah ketiga?',
+      'options': ['Ali', 'Umar', 'Utsman', 'Abu Bakar'],
+      'answer': 2,
+      'khalifah': 'Utsman'
+    },
+    {
+      'question': 'Gelar Utsman?',
+      'options': ['As-Siddiq', 'Al-Faruq', 'Dzun Nurain', 'Al-Amin'],
+      'answer': 2,
+      'khalifah': 'Utsman'
+    },
+    {
+      'question': 'Jasa besar Utsman?',
+      'options': ['Perang', 'Kodifikasi Al-Quran', 'Ekonomi', 'Hukum'],
+      'answer': 1,
+      'khalifah': 'Utsman'
+    },
+    {
+      'question': 'Sifat Utsman?',
+      'options': ['Keras', 'Pemalu', 'Kasih sayang', 'Pendiam'],
+      'answer': 1,
+      'khalifah': 'Utsman'
+    },
+    {
+      'question': 'Utsman wafat karena?',
+      'options': ['Sakit', 'Dibunuh', 'Perang', 'Tua'],
+      'answer': 1,
+      'khalifah': 'Utsman'
+    },
+
+    // Ali
+    {
+      'question': 'Siapa khalifah keempat?',
+      'options': ['Ali', 'Umar', 'Utsman', 'Abu Bakar'],
+      'answer': 0,
+      'khalifah': 'Ali'
+    },
+    {
+      'question': 'Keistimewaan Ali?',
+      'options': ['Kaya', 'Cerdas & berani', 'Pemalu', 'Tua'],
+      'answer': 1,
+      'khalifah': 'Ali'
+    },
+    {
+      'question': 'Ali adalah?',
+      'options': ['Paman Nabi', 'Sepupu & menantu Nabi', 'Sahabat biasa', 'Guru'],
+      'answer': 1,
+      'khalifah': 'Ali'
+    },
+    {
+      'question': 'Masa Ali ditandai?',
+      'options': ['Damai', 'Konflik internal', 'Ekspansi', 'Ekonomi'],
+      'answer': 1,
+      'khalifah': 'Ali'
+    },
+    {
+      'question': 'Ali wafat karena?',
+      'options': ['Sakit', 'Dibunuh', 'Perang', 'Tua'],
+      'answer': 1,
+      'khalifah': 'Ali'
     },
   ];
+
+  List<Map<String, dynamic>> filteredQuestions = [];
 
   @override
   void initState() {
     super.initState();
+    loadQuestionsByKhalifah(widget.materiId);
     startTimer();
   }
 
-  void startTimer() {
-    timeLeft = 15;
-    timer?.cancel();
+  void loadQuestionsByKhalifah(String khalifah) {
+    filteredQuestions =
+        questions.where((q) => q['khalifah'] == khalifah).toList();
+  }
 
-    timer = Timer.periodic(const Duration(seconds: 1), (t) {
+  void startTimer() {
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (timeLeft == 0) {
         nextQuestion();
       } else {
@@ -95,87 +185,35 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   void nextQuestion() {
-    timer?.cancel();
-
-    if (selectedAnswer == questions[currentQuestion]['answer']) {
-      score++;
-    }
-
-    showExplanation();
-  }
-
-  void showExplanation() {
-    final correctAnswer = questions[currentQuestion]['answer'];
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
-        title: const Text("Penjelasan"),
-        content: Text(
-          "Jawaban benar: $correctAnswer\n\n"
-              "${questions[currentQuestion]['explanation']}",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              goNext();
-            },
-            child: const Text("Lanjut"),
-          )
-        ],
-      ),
-    );
-  }
-
-  void goNext() {
-    if (currentQuestion < questions.length - 1) {
+    if (currentQuestion < filteredQuestions.length - 1) {
       setState(() {
         currentQuestion++;
-        selectedAnswer = null;
+        timeLeft = 30;
       });
-      startTimer();
     } else {
-      saveResult();
+      timer?.cancel();
+      showResult();
     }
   }
 
-  Future<void> saveResult() async {
-    try {
-      await FirebaseFirestore.instance.collection('quiz_results').add({
-        'userId': user?.uid,
-        'score': score,
-        'total': questions.length,
-        'createdAt': Timestamp.now(),
-      });
-    } catch (e) {}
-
-    showResult();
+  void checkAnswer(int index) {
+    if (index == filteredQuestions[currentQuestion]['answer']) {
+      score += 10;
+      correctAnswer++;
+    }
+    nextQuestion();
   }
 
   void showResult() {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20)),
-        title: const Text("Hasil Quiz"),
-        content: Text("Skor kamu: $score / ${questions.length}"),
+        title: const Text('Hasil Quiz'),
+        content: Text('Score: $score\nBenar: $correctAnswer'),
         actions: [
           TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() {
-                currentQuestion = 0;
-                score = 0;
-                selectedAnswer = null;
-              });
-              startTimer();
-            },
-            child: const Text("Ulangi"),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
           )
         ],
       ),
@@ -183,158 +221,30 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   @override
-  void dispose() {
-    timer?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final question = questions[currentQuestion];
+    final question = filteredQuestions[currentQuestion];
 
     return Scaffold(
-      backgroundColor: AppColors.cream,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        title: const Text(
-          "Quiz",
-          style: TextStyle(
-              color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        iconTheme: const IconThemeData(color: Colors.black),
-      ),
+      appBar: AppBar(title: Text(widget.materiId)),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-            // 🔥 HEADER INFO
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 8,
-                  )
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Soal ${currentQuestion + 1}",
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    "⏱ $timeLeft d",
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red),
-                  ),
-                ],
-              ),
+            LinearProgressIndicator(
+              value: (currentQuestion + 1) / filteredQuestions.length,
             ),
-
-            const SizedBox(height: 10),
-
-            // 🔥 PROGRESS BAR
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LinearProgressIndicator(
-                value: (currentQuestion + 1) / questions.length,
-                minHeight: 8,
-                backgroundColor: Colors.grey.shade300,
-                color: const Color(0xFF58CC02),
-              ),
-            ),
-
             const SizedBox(height: 20),
-
-            // 🔥 QUESTION CARD
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                  )
-                ],
-              ),
-              child: Text(
-                question['question'],
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-
+            Text(question['question']),
             const SizedBox(height: 20),
-
-            // 🔥 OPTIONS
-            ...question['options'].map<Widget>((option) {
-              final isSelected = selectedAnswer == option;
-
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    selectedAnswer = option;
-                  });
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? const Color(0xFF58CC02).withOpacity(0.15)
-                        : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: isSelected
-                          ? const Color(0xFF58CC02)
-                          : Colors.grey.shade300,
-                      width: 2,
-                    ),
-                  ),
-                  child: Text(
-                    option,
-                    style: const TextStyle(fontSize: 15),
-                  ),
-                ),
+            ...List.generate(4, (index) {
+              return ElevatedButton(
+                onPressed: () => checkAnswer(index),
+                child: Text(question['options'][index]),
               );
-            }).toList(),
-
+            }),
             const Spacer(),
-
-            // 🔥 BUTTON
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton(
-                onPressed: selectedAnswer == null ? null : nextQuestion,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF58CC02),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: const Text(
-                  "Jawab",
-                  style: TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-            )
+            Text('Waktu: $timeLeft detik')
           ],
         ),
       ),

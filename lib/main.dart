@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 // pages
 import 'pages/login_page.dart';
@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
       title: 'SKIventure Teacher',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF58CC02), // 🔥 Duolingo green
+          seedColor: const Color(0xFF58CC02),
         ),
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFF5F7FB),
@@ -64,13 +64,48 @@ class _TeacherHomePageState extends State<TeacherHomePage> {
 
   final List<Widget> _pages = [
     const TeacherDashboard(),
-    const QuizPage(),
+    const Placeholder(),
     const AttendancePage(),
     const ProfilePage(),
   ];
 
   void _onItemTapped(int index) {
+    if (index == 1) {
+      _openQuiz();
+      return;
+    }
+
     setState(() => _selectedIndex = index);
+  }
+
+  // =========================
+  // FIRESTORE QUIZ LOADER
+  // =========================
+  Future<void> _openQuiz() async {
+    final firestore = FirebaseFirestore.instance;
+
+    final materiSnapshot = await firestore
+        .collection("materi")
+        .limit(1)
+        .get();
+
+    if (materiSnapshot.docs.isEmpty) return;
+
+    final materi = materiSnapshot.docs.first;
+
+    final materiId = materi.id;
+    final teacherId = materi["teacher_id"];
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => QuizPage(
+          studentId: "student_001",
+          teacherId: teacherId,
+          materiId: materiId,
+        ),
+      ),
+    );
   }
 
   @override
@@ -110,8 +145,6 @@ class TeacherDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -128,7 +161,7 @@ class TeacherDashboard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
-            // 🔥 HEADER CARD
+            // HEADER CARD
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
@@ -158,7 +191,7 @@ class TeacherDashboard extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      "$greeting\n${user?.email ?? "Guru"}",
+                      "$greeting\nTeacher",
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 15,
@@ -207,12 +240,7 @@ class TeacherDashboard extends StatelessWidget {
                     icon: Icons.quiz_outlined,
                     title: "Hasil Quiz",
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const QuizPage(),
-                        ),
-                      );
+                      _openQuizFromMenu(context);
                     },
                   ),
                   _menuCard(
@@ -250,10 +278,39 @@ class TeacherDashboard extends StatelessWidget {
     );
   }
 
-  Widget _menuCard(BuildContext context,
-      {required IconData icon,
+  // =========================
+  // QUIZ FROM DASHBOARD MENU
+  // =========================
+  Future<void> _openQuizFromMenu(BuildContext context) async {
+    final firestore = FirebaseFirestore.instance;
+
+    final materiSnapshot = await firestore
+        .collection("materi")
+        .limit(1)
+        .get();
+
+    if (materiSnapshot.docs.isEmpty) return;
+
+    final materi = materiSnapshot.docs.first;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => QuizPage(
+          studentId: "student_001",
+          teacherId: materi["teacher_id"],
+          materiId: materi.id,
+        ),
+      ),
+    );
+  }
+
+  Widget _menuCard(
+      BuildContext context, {
+        required IconData icon,
         required String title,
-        required VoidCallback onTap}) {
+        required VoidCallback onTap,
+      }) {
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(20),

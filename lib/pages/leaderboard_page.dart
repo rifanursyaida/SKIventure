@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import 'materi_page.dart';
@@ -13,7 +12,6 @@ class LeaderboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FB),
@@ -64,7 +62,7 @@ class LeaderboardPage extends StatelessWidget {
               children: [
                 quickButton(Icons.play_arrow, "Quiz", () {
                   Navigator.push(context,
-                      MaterialPageRoute(builder: (_) => const QuizPage()));
+                      MaterialPageRoute(builder: (_) => const Placeholder()));
                 }),
                 quickButton(Icons.emoji_events, "Ranking", () {}),
                 quickButton(Icons.check, "Absensi", () {
@@ -231,7 +229,7 @@ class LeaderboardPage extends StatelessWidget {
                 MaterialPageRoute(builder: (_) => const MateriPage()));
           } else if (index == 2) {
             Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const QuizPage()));
+                MaterialPageRoute(builder: (_) => const Placeholder()));
           } else if (index == 3) {
             Navigator.push(context,
                 MaterialPageRoute(builder: (_) => const AttendancePage()));
